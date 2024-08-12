@@ -21,6 +21,6 @@
         
 再cd 20240723到這個資料夾。
         python manage.py runserver
-
+![image](https://github.com/CHEN880320/20240723/blob/main/1723453907255.jpg)
 
 chatbot_project\chatbot_project\api_urls.json，有從研究資料寄存所-台江，抓下來的各種圖資API。
