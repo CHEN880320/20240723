@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+        }
+        .chat-container {
+            width: 60%;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .messages {
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 400px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background: #dcf8c6;
+            border-top-right-radius: 0;
+            border-radius: 18px;
+            align-self: flex-end;
+        }
+        .bot-message {
+            background: #f1f1f1;
+            border-top-left-radius: 0;
+            border-radius: 18px;
+            align-self: flex-start;
+        }
+        .input-container {
+            display: flex;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>GeoChat</h1>
+        <div class="messages" id="chatbox"></div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Ask me anything...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        
+    </div>
+    <script>
+        document.getElementById('user-input').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const userInput = document.getElementById('user-input').value;
+            if (userInput.trim() === "") return;
+
+            // Append user message to chatbox
+            appendMessage(userInput, 'user-message');
+
+            fetch('/chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({message: userInput})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.response) {
+                    appendMessage(data.response, 'bot-message');
+                } 
+                if (data.error) {
+                    appendMessage(`Error: ${data.error}`, 'bot-message');
+                }
+                if (data.map_image_path) {
+                    console.log(`Map image path: ${data.map_image_path}`);
+                    const mapImage = document.getElementById('mapImage');
+                    mapImage.src = '/' + data.map_image_path;
+                    mapImage.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                appendMessage(`Error: ${error.message}`, 'bot-message');
+            });
+
+            // Clear the input field
+            document.getElementById('user-input').value = '';
+        }
+
+        function appendMessage(text, className) {
+            const messageContainer = document.createElement('div');
+            messageContainer.className = `message ${className}`;
+            messageContainer.innerText = text;
+
+            const chatbox = document.getElementById('chatbox');
+            chatbox.appendChild(messageContainer);
+            chatbox.scrollTop = chatbox.scrollHeight;  // Scroll to the bottom
+        }
+    </script>
+</body>
+</html>
